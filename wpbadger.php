@@ -107,13 +107,6 @@ function wpbadger_admin_notices()
     }
 }
 
-
-function wpbadger_admin_header($tab)
-{?>
-<div class="wrap wpbadger-wrap">
-<?php
-}
-
 // Checks two mandatory fields of configured. If options are empty or don't exist, return FALSE
 function wpbadger_configured()
 {
@@ -168,72 +161,70 @@ function wpbadger_configure_plugin()
 { 
     global $wpbadger_db_version;
 
-	wpbadger_admin_header('Configure Plugin');
-?>
-<h2>WPBadger Configuration</h2>
+    if ($_POST['save']) {
+        check_admin_referer( 'wpbadger_config' );
 
-<?php
-if ($_POST['save']) {
-    check_admin_referer( 'wpbadger_config' );
-
-    if (!get_option( 'wpbadger_issuer_lock' ) || is_super_admin())
-    {
-        if ($_REQUEST['wpbadger_issuer_name']) {
-            update_option('wpbadger_issuer_name', $_REQUEST['wpbadger_issuer_name']);
-        }
-
-        if ($_REQUEST['wpbadger_issuer_org']) {
-            update_option('wpbadger_issuer_org', $_REQUEST['wpbadger_issuer_org']);
-        }
-
-        if (is_super_admin())
+        if (!get_option( 'wpbadger_issuer_lock' ) || is_super_admin())
         {
-            update_option('wpbadger_issuer_lock', (bool)$_REQUEST['wpbadger_issuer_lock']);
+            if ($_REQUEST['wpbadger_issuer_name']) {
+                update_option('wpbadger_issuer_name', $_REQUEST['wpbadger_issuer_name']);
+            }
+
+            if ($_REQUEST['wpbadger_issuer_org']) {
+                update_option('wpbadger_issuer_org', $_REQUEST['wpbadger_issuer_org']);
+            }
+
+            if (is_super_admin())
+            {
+                update_option('wpbadger_issuer_lock', (bool)$_REQUEST['wpbadger_issuer_lock']);
+            }
         }
+
+        if ($_REQUEST['wpbadger_issuer_contact']) {
+            update_option('wpbadger_issuer_contact', $_REQUEST['wpbadger_issuer_contact']);
+        }
+
+        update_option('wpbadger_bulk_awards_allow_all', (bool)$_REQUEST['wpbadger_bulk_awards_allow_all']);
+
+        if ($_REQUEST['wpbadger_config_award_email_text']) {
+            update_option('wpbadger_config_award_email_text', $_REQUEST['wpbadger_config_award_email_text']);
+        }
+
+        echo "<div id='message' class='updated'><p>Options successfully updated</p></div>";
+    } elseif ($_POST['update_db']) {
+        global $wpbadger_award_schema, $wpbadger_badge_schema;
+
+        $query = new WP_Query( array( 'post_type' => $wpbadger_badge_schema->get_post_type_name(), 'nopaging' => true ) );
+        while ($query->next_post())
+        {
+            # Migrate the post_content to the description metadata
+            $desc = $wpbadger_badge_schema->get_post_description( $query->post->ID, $query->post );
+            update_post_meta( $query->post->ID, 'wpbadger-badge-description', $desc );
+
+            # Validate the post
+            $wpbadger_badge_schema->save_post_validate( $query->post->ID, $query->post );
+        }
+
+        $query = new WP_Query( array( 'post_type' => $wpbadger_award_schema->get_post_type_name(), 'nopaging' => true ) );
+        while ($query->next_post())
+        {
+            $wpbadger_award_schema->save_post_validate( $query->post->ID, $query->post );
+            # We just have to assume here that if the award is published then
+            # an email was sent
+            if ($query->post->post_status == 'publish') 
+                update_post_meta( $query->post->ID, 'wpbadger-award-email-sent', get_post_meta( $query->post->ID, 'wpbadger-award-email-address', true ) );
+        }
+
+        update_option( 'wpbadger_db_version', $wpbadger_db_version );
+
+        echo "<div class='updated'><p>Database successfully updated</p></div>";
     }
 
-	if ($_REQUEST['wpbadger_issuer_contact']) {
-		update_option('wpbadger_issuer_contact', $_REQUEST['wpbadger_issuer_contact']);
-	}
+    $issuer_disabled = (get_option('wpbadger_issuer_lock') && !is_super_admin()) ? 'disabled="disabled"' : '';
 
-    update_option('wpbadger_bulk_awards_allow_all', (bool)$_REQUEST['wpbadger_bulk_awards_allow_all']);
-
-	if ($_REQUEST['wpbadger_config_award_email_text']) {
-		update_option('wpbadger_config_award_email_text', $_REQUEST['wpbadger_config_award_email_text']);
-	}
-
-    echo "<div id='message' class='updated'><p>Options successfully updated</p></div>";
-} elseif ($_POST['update_db']) {
-    global $wpbadger_award_schema, $wpbadger_badge_schema;
-
-    $query = new WP_Query( array( 'post_type' => $wpbadger_badge_schema->get_post_type_name(), 'nopaging' => true ) );
-    while ($query->next_post())
-    {
-        # Migrate the post_content to the description metadata
-        $desc = $wpbadger_badge_schema->get_post_description( $query->post->ID, $query->post );
-        update_post_meta( $query->post->ID, 'wpbadger-badge-description', $desc );
-
-        # Validate the post
-        $wpbadger_badge_schema->save_post_validate( $query->post->ID, $query->post );
-    }
-
-    $query = new WP_Query( array( 'post_type' => $wpbadger_award_schema->get_post_type_name(), 'nopaging' => true ) );
-    while ($query->next_post())
-    {
-        $wpbadger_award_schema->save_post_validate( $query->post->ID, $query->post );
-        # We just have to assume here that if the award is published then
-        # an email was sent
-        if ($query->post->post_status == 'publish') 
-            update_post_meta( $query->post->ID, 'wpbadger-award-email-sent', get_post_meta( $query->post->ID, 'wpbadger-award-email-address', true ) );
-    }
-
-    update_option( 'wpbadger_db_version', $wpbadger_db_version );
-
-    echo "<div class='updated'><p>Database successfully updated</p></div>";
-}
-
-$issuer_disabled = (get_option('wpbadger_issuer_lock') && !is_super_admin()) ? 'disabled="disabled"' : '';
 ?>
+<div class="wrap">
+<h2>WPBadger Configuration</h2>
 
 <form method="POST" action="" name="wpbadger_config">
     <?php wp_nonce_field( 'wpbadger_config' ); ?>
@@ -241,22 +232,43 @@ $issuer_disabled = (get_option('wpbadger_issuer_lock') && !is_super_admin()) ? '
     <table class="form-table">
 
         <tr valign="top">
-        <th scope="row"><label for="wpbadger_issuer_name">Issuing Agent Name</label></th>
-        <td><input type="text" id="wpbadger_issuer_name" name="wpbadger_issuer_name" class="regular-text" value="<?php echo esc_attr( get_option('wpbadger_issuer_name') ); ?>" <?php echo $issuer_disabled ?> /></td>
+            <th scope="row"><label for="wpbadger_issuer_name">Issuing Agent Name</label></th>
+            <td>
+                <input type="text"
+                    id="wpbadger_issuer_name"
+                    name="wpbadger_issuer_name"
+                    class="regular-text"
+                    value="<?php esc_attr_e( get_option('wpbadger_issuer_name') ); ?>"
+                    <?php echo $issuer_disabled ?> />
+            </td>
         </tr>
 
         <tr valign="top">
-        <th scope="row"><label for="wpbadger_issuer_org">Issuing Organization</label></th>
-        <td><input type="text" id="wpbadger_issuer_org" name="wpbadger_issuer_org" class="regular-text" value="<?php echo esc_attr( get_option('wpbadger_issuer_org') ); ?>" <?php echo $issuer_disabled ?> /></td>
+            <th scope="row"><label for="wpbadger_issuer_org">Issuing Organization</label></th>
+            <td>
+                <input type="text"
+                    id="wpbadger_issuer_org"
+                    name="wpbadger_issuer_org"
+                    class="regular-text"
+                    value="<?php esc_attr_e( get_option('wpbadger_issuer_org') ); ?>"
+                    <?php echo $issuer_disabled ?> />
+            </td>
         </tr>
 
         <?php
-        if (is_super_admin()) {
+        if (is_super_admin())
+        {
             ?>
 
             <tr valign="top">
-            <th scope="row"></th>
-            <td><label><input type="checkbox" id="wpbadger_issuer_lock" name="wpbadger_issuer_lock" value="1" <?php echo get_option('wpbadger_issuer_lock') ? 'checked="checked"' : '' ?> /> Disable editting of issuer information for non-admins.</label></td>
+                <th scope="row"></th>
+                <td><label>
+                    <input type="checkbox"
+                        id="wpbadger_issuer_lock"
+                        name="wpbadger_issuer_lock"
+                        value="1" <?php echo get_option('wpbadger_issuer_lock') ? 'checked="checked"' : '' ?> />
+                    Disable editting of issuer information for non-admins.
+                </label></td>
             </tr>
             
             <?php
@@ -264,30 +276,48 @@ $issuer_disabled = (get_option('wpbadger_issuer_lock') && !is_super_admin()) ? '
         ?>
 
         <tr valign="top">
-        <th scope="row"><label for="wpbadger_issuer_contact">Contact Email Address</label></th>
-        <td><input type="text" id="wpbadger_issuer_contact" name="wpbadger_issuer_contact" class="regular-text" value="<?php echo esc_attr( get_option('wpbadger_issuer_contact') ); ?>" /></td>
+            <th scope="row"><label for="wpbadger_issuer_contact">Contact Email Address</label></th>
+            <td>
+                <input type="text"
+                    id="wpbadger_issuer_contact"
+                    name="wpbadger_issuer_contact"
+                    class="regular-text"
+                    value="<?php esc_attr_e( get_option('wpbadger_issuer_contact') ); ?>" />
+            </td>
         </tr>
 
         <tr valign="top">
-        <th scope="row"></th>
-        <td><label><input type="checkbox" name="wpbadger_bulk_awards_allow_all" id="wpbadger_bulk_awards_allow_all" value="1" <?php echo get_option('wpbadger_bulk_awards_allow_all') ? 'checked="checked"' : '' ?> /> Allow all users to bulk award badges.</label></td>
+            <th scope="row"></th>
+            <td><label>
+                <input type="checkbox"
+                    name="wpbadger_bulk_awards_allow_all"
+                    id="wpbadger_bulk_awards_allow_all"
+                    value="1"
+                    <?php echo get_option('wpbadger_bulk_awards_allow_all') ? 'checked="checked"' : '' ?> />
+                Allow all users to bulk award badges.
+            </label></td>
         </tr>
 
 		<tr valign="top">
-		<th scope="row"><label for="wpbadger_config_award_email_text">Badge Award Email Text</label></th>
-		<td><textarea name="wpbadger_config_award_email_text" id="wpbadger_config_award_email_text" class="large-text" rows="5" cols="45"><?php echo esc_attr( get_option('wpbadger_config_award_email_text') ); ?></textarea></td>
+		    <th scope="row"><label for="wpbadger_config_award_email_text">Badge Award Email Text</label></th>
+            <td>
+                <textarea
+                    name="wpbadger_config_award_email_text"
+                    id="wpbadger_config_award_email_text"
+                    class="large-text" rows="5" cols="45"><?php echo esc_textarea( get_option('wpbadger_config_award_email_text') ); ?></textarea>
+            </td>
 		</tr>
     </table>
 
     <p class="submit">
-    <input type="submit" class="button-primary" name="save" value="<?php _e('Save Changes') ?>" />
+        <input type="submit" class="button-primary" name="save" value="<?php _e('Save Changes') ?>" />
     </p>
 
 </form>
 
 <form method="POST" action="" name="wpbadger_db_update">
-<input type="hidden" name="wpbadger_db_version" value="<?php esc_attr_e( $wpbadger_db_version ) ?>" />
-<input type="submit" name="update_db" value="<?php _e('Update Database') ?>" />
+    <input type="hidden" name="wpbadger_db_version" value="<?php esc_attr_e( $wpbadger_db_version ) ?>" />
+    <input type="submit" name="update_db" value="<?php _e('Update Database') ?>" />
 </form>
 </div>
 
@@ -301,4 +331,116 @@ function wpbadger_disable_quickedit( $actions, $post ) {
     return $actions;
 }
 add_filter( 'post_row_actions', 'wpbadger_disable_quickedit', 10, 2 );
+
+function wpbadger_template( $template, $values )
+{
+    $defaults = array(
+        '{'                 => '{',
+        'ISSUER_NAME'       => get_option( 'wpbadger_issuer_name' ),
+        'ISSUER_ORG'        => get_option( 'wpbadger_issuer_org' ),
+        'ISSUER_CONTACT'    => get_option( 'wpbadger_issuer_contact' ),
+    );
+
+    $values = array_merge( $defaults, $values );
+
+    /*
+     * Possible states:
+     *
+     * - text
+     * - tag-open
+     * - tag-close
+     * - tag-sub
+     * - end
+     */
+    $state = 'text';
+    $tag = null;
+    $pos = 0;
+    $result = '';
+
+    while ($state != 'end')
+    {
+        #printf( "DEBUG: state = %s; tag = %s; pos = %d\n", $state, $tag, $pos );
+
+        switch ($state)
+        {
+        case 'text':
+            if ($pos >= strlen( $template ))
+            {
+                $state = 'end';
+                break;
+            }
+
+            $found = strpos( $template, '{', $pos );
+            if ($found === false)
+            {
+                # No opening tags found. Just append the substring to the
+                # result and exit
+                $result .= substr( $template, $pos );
+                $state = 'end';
+            }
+            else
+            {
+                # Found a tag! Append the substring before the tag to
+                # the result, advance the $pos, and go to tag-open, unless
+                $result .= substr( $template, $pos, ($found - $pos) );
+                $pos = $found + 1;
+
+                $state = 'tag-open';
+            }
+            break;
+
+        case 'tag-open':
+            $found = strpos( $template, '}', $pos );
+
+            if ($found === false)
+            {
+                # We didn't find a valid close tag after our start tag.
+                # Just output the start tag and continue on as text.
+                $result .= '{';
+                $state = 'text';
+            }
+            else
+            {
+                # Grab the tag and go to tag-close
+                $tag = substr( $template, $pos, ($found - $pos) );
+                $state = 'tag-close';
+            }
+            break;
+
+        case 'tag-close':
+            if (!preg_match( '/^(([a-z_]+)|{)$/i', $tag ))
+            {
+                # Not a valid tag. Output the start tag and continue on.
+                $result .= '{';
+                $state = 'text';
+            }
+            else
+            {
+                # Advance our position and do the tag sub
+                $pos += strlen( $tag ) + 1;
+                $state = 'tag-sub';
+            }
+            break;
+
+        case 'tag-sub':
+            if (isset( $values[ $tag ] ))
+            {
+                $result .= $values[ $tag ];
+                $state = 'text';
+            }
+            else
+            {
+                # If we don't have a substitution to make then go ahead
+                # and output the raw tag
+                $result .= '{' . $tag . '}';
+                $state = 'text';
+            }
+            break;
+        }
+    }
+
+    return $result;
+}
+
+
 
