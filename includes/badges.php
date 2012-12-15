@@ -390,7 +390,7 @@ class WPBadger_Badge_Schema
             delete_post_meta( $post_id, $meta_key, $meta_value );		
 
         $meta_key = 'wpbadger-badge-description';
-        $meta_value = strip_tags( $_POST[ $meta_key ] );
+        $meta_value = strip_tags( stripslashes( $_POST[ $meta_key ] ) );
 
         if (empty( $meta_value ))
             delete_post_meta( $post_id, $meta_key );
