@@ -226,7 +226,7 @@ function wpbadger_configure_plugin()
         if (empty( $tmp ))
             update_option(
                 'wpbadger_awarded_email_subject',
-                __( "You have been awarded the {BADGE_TITLE} badge", 'wpbadger' )
+                __( 'You have been awarded the "{BADGE_TITLE}" badge', 'wpbadger' )
             );
 
         $tmp = get_option( 'wpbadger_awarded_email_html' );
@@ -235,7 +235,11 @@ function wpbadger_configure_plugin()
             $tmp = get_option( 'wpbadger_config_award_email_text' );
             if (empty( $tmp ))
                 $tmp = __( <<<EOHTML
-Congratulations! {ISSUER_NAME} at {ISSUER_ORG} has awarded you the <a href="{BADGE_URL}">{BADGE_TITLE}</a> badge. You can choose to accept or reject the badge into your <a href="http://openbadges.org/">OpenBadges backpack</a> by following this link:<br /><br /><a href="{AWARD_URL}">{AWARD_URL}</a><br /><br />If you have any issues with this award, please contact <a href="mailto:{ISSUER_CONTACT}">{ISSUER_CONTACT}</a>.
+Congratulations! {ISSUER_NAME} at {ISSUER_ORG} has awarded you the "<a href="{BADGE_URL}">{BADGE_TITLE}</a>" badge. You can choose to accept or reject the badge into your <a href="http://openbadges.org/">OpenBadges Backpack</a> by following this link:
+
+<a href="{AWARD_URL}">{AWARD_URL}</a>
+
+If you have any issues with this award, please contact <a href="mailto:{ISSUER_CONTACT}">{ISSUER_CONTACT}</a>.
 EOHTML
             , 'wpbadger' );
 
@@ -330,8 +334,9 @@ EOHTML
     <h3 class="title">Awarded Email Template</h3>
     
     <p>This is the email send when a badge is awarded to a user.  Valid template tags are:
-    {ISSUER_NAME}; {ISSUER_ORG}; {ISSUER_CONTACT}; {BADGE_TITLE}; {BADGE_URL}; {AWARD_TITLE};
-    and {AWARD_URL}.</p>
+    <b>{ISSUER_NAME}</b>; <b>{ISSUER_ORG}</b>; <b>{ISSUER_CONTACT}</b>; <b>{BADGE_TITLE}</b>;
+    {BADGE_URL}; {BADGE_IMAGE_URL}; {BADGE_DESCRIPTION}; <b>{AWARD_TITLE}</b>; {AWARD_URL}, and {EVIDENCE}.
+    Only <b>bold</b> tags are avilable for the subject.</p>
 
     <label for="wpbadger-awarded-email-subject"><em>Subject</em></label>
     <input type="text"

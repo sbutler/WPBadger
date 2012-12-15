@@ -881,26 +881,34 @@ EOHTML;
 
         $badge_title    = get_the_title( $badge_id );
         $badge_url      = get_permalink( $badge_id );
+        $badge_image_id = get_post_thumbnail_id( $badge_id );
+        $badge_image_url = wp_get_attachment_url( $badge_image_id );
+        $badge_desc     = get_post_meta( $badge_id, 'wpbadger-badge-description', true );
+
+        $award          = get_post( $post_id );
         $award_title    = get_the_title( $post_id );
         $award_url      = get_permalink( $post_id );
+        $award_evidence = $award->post_content;
 
         $subject = wpbadger_template(
             get_option( 'wpbadger_awarded_email_subject' ),
             array(
                 'BADGE_TITLE'   => $badge_title,
-                'BADGE_URL'     => $badge_url,
-                'AWARD_TITLE'   => $award_title,
-                'AWARD_URL'     => $award_url
+                'AWARD_TITLE'   => $award_title
             )
         );
+        $subject = apply_filters( 'wpbadger_awarded_email_subject', $subject );
 
         $message = wpbadger_template(
             get_option( 'wpbadger_awarded_email_html' ),
             array(
-                'BADGE_TITLE'   => esc_html( $badge_title ),
-                'BADGE_URL'     => $badge_url,
-                'AWARD_TITLE'   => esc_html( $award_title ),
-                'AWARD_URL'     => $award_url
+                'BADGE_TITLE'       => esc_html( $badge_title ),
+                'BADGE_URL'         => $badge_url,
+                'BADGE_IMAGE_URL'   => $badge_image_url,
+                'BADGE_DESCRIPTION' => esc_html( $badge_desc ),
+                'AWARD_TITLE'       => esc_html( $award_title ),
+                'AWARD_URL'         => $award_url,
+                'EVIDENCE'          => $award_evidence
             )
         );
 
