@@ -871,22 +871,45 @@ EOHTML;
         if (get_post_meta( $post_id, 'wpbadger-award-status', true ) != 'Awarded')
             return;
 
-        $badge = get_the_title( get_post_meta( $post_id, 'wpbadger-award-choose-badge', true ) );
+        $badge_id = (int)get_post_meta( $post_id, 'wpbadger-award-choose-badge', true );
+        if (!$badge_id)
+            return;
+
         $email_address = get_post_meta( $post_id, 'wpbadger-award-email-address', true );
         if (get_post_meta( $post_id, 'wpbadger-award-email-sent', true ) == $email_address)
             return;
 
-        $post_title = get_the_title( $post_id );
-        $post_url = get_permalink( $post_id );
-        $subject = "Congratulations! You have been awarded the " . $badge . " badge!";
+        $badge_title    = get_the_title( $badge_id );
+        $badge_url      = get_permalink( $badge_id );
+        $award_title    = get_the_title( $post_id );
+        $award_url      = get_permalink( $post_id );
 
-        if (get_option( 'wpbadger_config_award_email_text' ))
-            $message = get_option( 'wpbadger_config_award_email_text' ) . "\n\n";
-        else
-            $message = "Congratulations, " . get_option( 'wpbadger_issuer_org' ) . " has awarded you a badge. Please visit the link below to redeem it.\n\n";			
-        $message .= $post_url . "\n\n";
+        $subject = wpbadger_template(
+            get_option( 'wpbadger_awarded_email_subject' ),
+            array(
+                'BADGE_TITLE'   => $badge_title,
+                'BADGE_URL'     => $badge_url,
+                'AWARD_TITLE'   => $award_title,
+                'AWARD_URL'     => $award_url
+            )
+        );
 
-        wp_mail( $email_address, $subject, $message );
+        $message = wpbadger_template(
+            get_option( 'wpbadger_awarded_email_html' ),
+            array(
+                'BADGE_TITLE'   => esc_html( $badge_title ),
+                'BADGE_URL'     => $badge_url,
+                'AWARD_TITLE'   => esc_html( $award_title ),
+                'AWARD_URL'     => $award_url
+            )
+        );
+
+        add_filter( 'wpbadger_awarded_email_html', 'wptexturize'        );
+        add_filter( 'wpbadger_awarded_email_html', 'convert_chars'      );
+        add_filter( 'wpbadger_awarded_email_html', 'wpautop'            );
+        $message = apply_filters( 'wpbadger_awarded_email_html', $message );
+
+        wp_mail( $email_address, $subject, $message, array( 'Content-Type: text/html' ) );
         update_post_meta( $post_id, 'wpbadger-award-email-sent', $email_address );
     }
 }

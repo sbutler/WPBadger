@@ -26,7 +26,7 @@ require_once( dirname(__FILE__) . '/includes/badges_stats.php' );
 require_once( dirname(__FILE__) . '/includes/awards.php' );
 
 global $wpbadger_db_version;
-$wpbadger_db_version = "0.7.2";
+$wpbadger_db_version = "0.7.3";
 
 function wpbadger_activate()
 {
@@ -161,37 +161,42 @@ function wpbadger_configure_plugin()
 { 
     global $wpbadger_db_version;
 
-    if ($_POST['save']) {
+    if ($_POST[ 'save' ])
+    {
         check_admin_referer( 'wpbadger_config' );
 
         if (!get_option( 'wpbadger_issuer_lock' ) || is_super_admin())
         {
-            if ($_REQUEST['wpbadger_issuer_name']) {
-                update_option('wpbadger_issuer_name', $_REQUEST['wpbadger_issuer_name']);
-            }
+            $val = trim( stripslashes( $_POST[ 'wpbadger_issuer_name' ] ) );
+            if (!empty( $val ))
+                update_option( 'wpbadger_issuer_name', $val );
 
-            if ($_REQUEST['wpbadger_issuer_org']) {
-                update_option('wpbadger_issuer_org', $_REQUEST['wpbadger_issuer_org']);
-            }
+            $val = trim( stripslashes( $_POST[ 'wpbadger_issuer_org' ] ) );
+            if (!empty( $val ))
+                update_option( 'wpbadger_issuer_org', $val );
 
             if (is_super_admin())
-            {
-                update_option('wpbadger_issuer_lock', (bool)$_REQUEST['wpbadger_issuer_lock']);
-            }
+                update_option( 'wpbadger_issuer_lock', (bool)$_POST[ 'wpbadger_issuer_lock' ] );
         }
 
-        if ($_REQUEST['wpbadger_issuer_contact']) {
-            update_option('wpbadger_issuer_contact', $_REQUEST['wpbadger_issuer_contact']);
-        }
+        $val = trim( stripslashes( $_POST[ 'wpbadger_issuer_contact' ] ) );
+        if (!empty( $val ))
+            update_option( 'wpbadger_issuer_contact', $val );
 
-        update_option('wpbadger_bulk_awards_allow_all', (bool)$_REQUEST['wpbadger_bulk_awards_allow_all']);
+        update_option( 'wpbadger_bulk_awards_allow_all', (bool)$_POST[ 'wpbadger_bulk_awards_allow_all' ] );
 
-        if ($_REQUEST['wpbadger_config_award_email_text']) {
-            update_option('wpbadger_config_award_email_text', $_REQUEST['wpbadger_config_award_email_text']);
-        }
+        $val = trim( stripslashes( $_POST[ 'wpbadger_awarded_email_subject' ] ) );
+        if (!empty( $val ))
+            update_option( 'wpbadger_awarded_email_subject', $val );
+
+        $val = trim( stripslashes( $_POST[ 'wpbadgerawardedemailhtml' ] ) );
+        if (!empty( $val ))
+            update_option( 'wpbadger_awarded_email_html', $val );
 
         echo "<div id='message' class='updated'><p>Options successfully updated</p></div>";
-    } elseif ($_POST['update_db']) {
+    }
+    elseif ($_POST[ 'update_db' ])
+    {
         global $wpbadger_award_schema, $wpbadger_badge_schema;
 
         $query = new WP_Query( array( 'post_type' => $wpbadger_badge_schema->get_post_type_name(), 'nopaging' => true ) );
@@ -209,10 +214,32 @@ function wpbadger_configure_plugin()
         while ($query->next_post())
         {
             $wpbadger_award_schema->save_post_validate( $query->post->ID, $query->post );
+            
             # We just have to assume here that if the award is published then
             # an email was sent
-            if ($query->post->post_status == 'publish') 
+            $tmp = get_post_meta( $query->post->ID, 'wpbadger-award-email-sent' );
+            if (empty( $tmp ) && $query->post->post_status == 'publish') 
                 update_post_meta( $query->post->ID, 'wpbadger-award-email-sent', get_post_meta( $query->post->ID, 'wpbadger-award-email-address', true ) );
+        }
+
+        $tmp = get_option( 'wpbadger_awarded_email_subject' );
+        if (empty( $tmp ))
+            update_option(
+                'wpbadger_awarded_email_subject',
+                __( "You have been awarded the {BADGE_TITLE} badge", 'wpbadger' )
+            );
+
+        $tmp = get_option( 'wpbadger_awarded_email_html' );
+        if (empty( $tmp ))
+        {
+            $tmp = get_option( 'wpbadger_config_award_email_text' );
+            if (empty( $tmp ))
+                $tmp = __( <<<EOHTML
+Congratulations! {ISSUER_NAME} at {ISSUER_ORG} has awarded you the <a href="{BADGE_URL}">{BADGE_TITLE}</a> badge. You can choose to accept or reject the badge into your <a href="http://openbadges.org/">OpenBadges backpack</a> by following this link:<br /><br /><a href="{AWARD_URL}">{AWARD_URL}</a><br /><br />If you have any issues with this award, please contact <a href="mailto:{ISSUER_CONTACT}">{ISSUER_CONTACT}</a>.
+EOHTML
+            , 'wpbadger' );
+
+            update_option( 'wpbadger_awarded_email_html', $tmp );
         }
 
         update_option( 'wpbadger_db_version', $wpbadger_db_version );
@@ -267,7 +294,7 @@ function wpbadger_configure_plugin()
                         id="wpbadger_issuer_lock"
                         name="wpbadger_issuer_lock"
                         value="1" <?php echo get_option('wpbadger_issuer_lock') ? 'checked="checked"' : '' ?> />
-                    Disable editting of issuer information for non-admins.
+                    Disabl editting of issuer information for non-admins.
                 </label></td>
             </tr>
             
@@ -298,16 +325,24 @@ function wpbadger_configure_plugin()
             </label></td>
         </tr>
 
-		<tr valign="top">
-		    <th scope="row"><label for="wpbadger_config_award_email_text">Badge Award Email Text</label></th>
-            <td>
-                <textarea
-                    name="wpbadger_config_award_email_text"
-                    id="wpbadger_config_award_email_text"
-                    class="large-text" rows="5" cols="45"><?php echo esc_textarea( get_option('wpbadger_config_award_email_text') ); ?></textarea>
-            </td>
-		</tr>
     </table>
+
+    <h3 class="title">Awarded Email Template</h3>
+    
+    <p>This is the email send when a badge is awarded to a user.  Valid template tags are:
+    {ISSUER_NAME}; {ISSUER_ORG}; {ISSUER_CONTACT}; {BADGE_TITLE}; {BADGE_URL}; {AWARD_TITLE};
+    and {AWARD_URL}.</p>
+
+    <label for="wpbadger-awarded-email-subject"><em>Subject</em></label>
+    <input type="text"
+        name="wpbadger_awarded_email_subject"
+        id="wpbadger-awarded-email-subject"
+        class="widefat"
+        value="<?php esc_attr_e( get_option( 'wpbadger_awarded_email_subject' ) ) ?>" />
+
+    <br /><br />
+    <label for="wpbadgerawardedemailhtml"><em>HTML Body</em></label>
+    <?php wp_editor( get_option( 'wpbadger_awarded_email_html' ), 'wpbadgerawardedemailhtml' ) ?>
 
     <p class="submit">
         <input type="submit" class="button-primary" name="save" value="<?php _e('Save Changes') ?>" />
@@ -340,6 +375,9 @@ function wpbadger_template( $template, $values )
         'ISSUER_ORG'        => get_option( 'wpbadger_issuer_org' ),
         'ISSUER_CONTACT'    => get_option( 'wpbadger_issuer_contact' ),
     );
+
+    if (empty( $defaults[ 'ISSUER_CONTACT' ] ))
+        $defaults[ 'ISSUER_CONTACT' ] = get_bloginfo( 'admin_email' );
 
     $values = array_merge( $defaults, $values );
 
