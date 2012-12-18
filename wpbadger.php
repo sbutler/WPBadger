@@ -298,7 +298,7 @@ EOHTML
                         id="wpbadger_issuer_lock"
                         name="wpbadger_issuer_lock"
                         value="1" <?php echo get_option('wpbadger_issuer_lock') ? 'checked="checked"' : '' ?> />
-                    Disabl editting of issuer information for non-admins.
+                    Disable editting of issuer information for non-admins.
                 </label></td>
             </tr>
             
