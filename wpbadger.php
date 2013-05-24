@@ -118,9 +118,9 @@ function wpbadger_admin_notices()
 // Checks two mandatory fields of configured. If options are empty or don't exist, return FALSE
 function wpbadger_configured()
 {
-    if (!get_option('wpbadger_config_origin'))
+    if (!get_option('wpbadger_issuer_org'))
         return false;
-    if (!get_option('wpbadger_config_name'))
+    if (!get_option('wpbadger_issuer_name'))
         return false;
 
     if (!get_option('wpbadger_awarded_email_subject'))
