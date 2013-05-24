@@ -202,7 +202,7 @@ function wpbadger_configure_plugin()
 
         $val = trim( stripslashes( $_POST[ 'wpbadger_awarded_email_subject' ] ) );
         if (empty( $val ))
-            $val = __( 'You have been awarded the "{BADGE_TITLE}" badge', 'wpbadger' )
+            $val = __( 'You have been awarded the "{BADGE_TITLE}" badge', 'wpbadger' );
         update_option( 'wpbadger_awarded_email_subject', $val );
 
         $val = trim( stripslashes( $_POST[ 'wpbadgerawardedemailhtml' ] ) );
