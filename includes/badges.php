@@ -353,7 +353,7 @@ class WPBadger_Badge_Schema
             array( $this, 'meta_box_version' ),		// Callback function
             $this->get_post_type_name(),						// Admin page (or post type)
             'side',							// Context
-            'default'						// Priority
+            'low'						// Priority
         );
     }
 
