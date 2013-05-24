@@ -155,6 +155,8 @@ class WPBadger_Badge_Schema
         $valid = $this->check_valid( $post->ID, $post );
 
         if (!$valid[ 'image' ])
+            echo '<div class="error"><p>'.__("You must set a badge image.", 'wpbadger').'</p></div>';
+        if (!$valid[ 'image-png' ])
             echo '<div class="error"><p>'.__("You must set a badge image that is a PNG file.", 'wpbadger').'</p></div>';
         if (!$valid[ 'description' ])
             echo '<div class="error"><p>'.__("You must enter a badge description.", 'wpbadger').'</p></div>';
@@ -184,6 +186,7 @@ class WPBadger_Badge_Schema
 
         $rv = array(
             'image'         => false,
+            'image-png'     => true,        # this gets defaulted to 'false' only if 'image' is true
             'description'   => false,
             'description-length' => false,
             'criteria'      => false,
@@ -197,11 +200,16 @@ class WPBadger_Badge_Schema
             $image_file = get_attached_file( $image_id );
             if (!empty( $image_file ))
             {
+                $rv[ 'image' ] = true;
+                $rv[ 'image-png' ] = false;
+
                 $image_ext = pathinfo( $image_file, PATHINFO_EXTENSION );
                 if (strtolower( $image_ext ) == 'png')
-                    $rv[ 'image' ] = true;
+                    $rv[ 'image-png' ] = true;
             }
         }
+        else
+
 
         # Check that the description is not empty.
         $desc = get_post_meta( $post_id, 'wpbadger-badge-description', true );
@@ -218,7 +226,13 @@ class WPBadger_Badge_Schema
         if ($post->post_status == 'publish')
             $rv[ 'status' ] = true;
 
-        $rv[ 'all' ] = $rv[ 'image' ] && $rv[ 'description' ] && $rv[ 'description-length' ] && $rv[ 'criteria' ] && $rv[ 'status' ];
+        $rv[ 'all' ] =
+            $rv[ 'image' ] &&
+            $rv[ 'image-png' ] &&
+            $rv[ 'description' ] &&
+            $rv[ 'description-length' ] &&
+            $rv[ 'criteria' ] &&
+            $rv[ 'status' ];
 
         return $rv;
     }
