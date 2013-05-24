@@ -201,12 +201,21 @@ function wpbadger_configure_plugin()
         update_option( 'wpbadger_bulk_awards_allow_all', (bool)$_POST[ 'wpbadger_bulk_awards_allow_all' ] );
 
         $val = trim( stripslashes( $_POST[ 'wpbadger_awarded_email_subject' ] ) );
-        if (!empty( $val ))
-            update_option( 'wpbadger_awarded_email_subject', $val );
+        if (empty( $val ))
+            $val = __( 'You have been awarded the "{BADGE_TITLE}" badge', 'wpbadger' )
+        update_option( 'wpbadger_awarded_email_subject', $val );
 
         $val = trim( stripslashes( $_POST[ 'wpbadgerawardedemailhtml' ] ) );
-        if (!empty( $val ))
-            update_option( 'wpbadger_awarded_email_html', $val );
+        if (empty( $val ))
+            $val = __( <<<EOHTML
+Congratulations! {ISSUER_NAME} at {ISSUER_ORG} has awarded you the "<a href="{BADGE_URL}">{BADGE_TITLE}</a>" badge. You can choose to accept or reject the badge into your <a href="http://openbadges.org/">OpenBadges Backpack</a> by following this link:
+
+<a href="{AWARD_URL}">{AWARD_URL}</a>
+
+If you have any issues with this award, please contact <a href="mailto:{ISSUER_CONTACT}">{ISSUER_CONTACT}</a>.
+EOHTML
+            , 'wpbadger' );
+        update_option( 'wpbadger_awarded_email_html', $val );
 
         echo "<div id='message' class='updated'><p>Options successfully updated</p></div>";
     }
