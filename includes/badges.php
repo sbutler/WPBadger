@@ -208,8 +208,6 @@ class WPBadger_Badge_Schema
                     $rv[ 'image-png' ] = true;
             }
         }
-        else
-
 
         # Check that the description is not empty.
         $desc = get_post_meta( $post_id, 'wpbadger-badge-description', true );
