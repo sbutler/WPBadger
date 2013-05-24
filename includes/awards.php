@@ -870,6 +870,8 @@ EOHTML;
             return;
         if (get_post_meta( $post_id, 'wpbadger-award-status', true ) != 'Awarded')
             return;
+        if (!wpbadger_configured())
+            return;
 
         $badge_id = (int)get_post_meta( $post_id, 'wpbadger-award-choose-badge', true );
         if (!$badge_id)

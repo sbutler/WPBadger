@@ -105,16 +105,31 @@ function wpbadger_admin_notices()
         </div>
         <?php
     }
+    elseif (!wpbadger_configured())
+    {
+        ?>
+        <div class="error">
+            <p>WPBadger has not been configured. Please go to the <a href="<?php echo admin_url( 'options-general.php?page=wpbadger_configure_plugin' ) ?>">configuration page</a>.</p>
+        </div>
+        <?php
+    }
 }
 
 // Checks two mandatory fields of configured. If options are empty or don't exist, return FALSE
 function wpbadger_configured()
 {
-	if (get_option('wpbadger_config_origin') && get_option('wpbadger_config_name')) {
-		return TRUE;
-	} else {
-		return FALSE;
-	}
+    if (!get_option('wpbadger_config_origin'))
+        return false;
+    if (!get_option('wpbadger_config_name'))
+        return false;
+
+    if (!get_option('wpbadger_awarded_email_subject'))
+        return false;
+    $tmp = get_option( 'wpbadger_awarded_email_html' );
+    if (!$tmp || strpos( $tmp, '{AWARD_URL}' ) === false)
+        return false;
+
+    return true;
 }
 
 function wpbadger_shortcode()
