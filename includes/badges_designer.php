@@ -19,7 +19,7 @@ add_action( 'wp_ajax_wpbadger_badgedesigner_publish', 'wpbadger_ajax_badgedesign
  */
 function wpbadger_badgedesigner_admin_post_thumbnail_html( $content, $post_id )
 {
-    global $user_email, $wpbadger_badge_schema;
+    global $user_ID, $wpbadger_badge_schema;
 
     if (get_post_type( $post_id ) != $wpbadger_badge_schema->get_post_type_name())
         return $content;
@@ -36,13 +36,14 @@ function wpbadger_badgedesigner_admin_post_thumbnail_html( $content, $post_id )
         esc_html__( 'Media Library' )
     );
 
-    $designer_link = sprintf( '<a href="https://www.openbadges.me/designer.html?format=json&amp;origin=%3$s&amp;email=%4$s" title="%1$s" id="wpbadger-badge-designer" data-post-id="%5$d" data-nonce="%6$s" data-badge-source="openbadges.me">%2$s</a>',
+    $designer_link = sprintf( '<a href="https://www.openbadges.me/designer.html?format=json&amp;origin=%3$s&amp;email=%4$s&amp;uniqueID=%7$s" title="%1$s" id="wpbadger-badge-designer" data-post-id="%5$d" data-nonce="%6$s" data-badge-source="openbadges.me">%2$s</a>',
         esc_attr__( 'Badge Designer', 'wpbadger' ),
         esc_html__( 'Badge Designer', 'wpbadger' ),
         urlencode( get_site_url() ),
-        urlencode( $user_email ),
+        urlencode( get_bloginfo( 'admin_email' ) ),
         $post_id,
-        esc_attr( wp_create_nonce( 'wpbadger-badgedesigner' ) )
+        esc_attr( wp_create_nonce( 'wpbadger-badgedesigner' ) ),
+        $user_id,
     );
 
     return <<<EOHTML
