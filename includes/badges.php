@@ -37,6 +37,12 @@ class WPBadger_Badge_Schema
         add_action( 'save_post', array( $this, 'save_post_validate' ), 99, 2 );
         add_filter( 'display_post_states', array( $this, 'display_post_states' ) );
         add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+        /* validate the post again when the metadata changes. This really only checks
+         * if the key is the thumbnail, since this happens over AJAX and these are the only
+         * hooks we have to catch it. */
+        add_action( 'updated_post_meta', array( $this, 'changed_post_meta' ), 99, 4 );
+        add_action( 'added_post_meta', array( $this, 'changed_post_meta' ), 99, 4 );
+        add_action( 'deleted_post_meta', array( $this, 'changed_post_meta' ), 99, 4 );
 
         add_filter( 'manage_badge_posts_columns', array( $this, 'manage_posts_columns' ), 10 );
         add_action( 'manage_badge_posts_custom_column', array( $this, 'manage_posts_custom_column' ), 10, 2 );
@@ -164,6 +170,20 @@ class WPBadger_Badge_Schema
             echo '<div class="error"><p>'.__("The description cannot be longer than 128 characters.", 'wpbadger').'</p></div>';
         if (!$valid[ 'criteria' ])
             echo '<div class="error"><p>'.__("You must enter the badge criteria.", 'wpbadger').'</p></div>';
+    }
+
+    /**
+     * Metadata for the post changed. Other metadata comes in with a post publish, so we check it
+     * there. But the thumbnail comes in with AJAX on its own, and a generic metadata hook is the
+     * best we get. So check the thumbnail ID here.
+     */
+    function changed_post_meta( $meta_id, $post_id, $meta_key, $meta_value )
+    {
+        if ($meta_key != '_thumbnail_id')
+            return;
+
+        $post = get_post( $post_id );
+        $this->save_post_validate( $post_id, $post );
     }
 
     /**
