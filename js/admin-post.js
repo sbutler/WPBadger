@@ -55,8 +55,9 @@ jQuery(document).ready(function ($) {
     $.post(
       ajaxurl,
       {
-        action: 'wpbadger_badge_designer_publish',
+        action: 'wpbadger_badgedesigner_publish',
       badge: evt.data,
+      badge_source: $designer.data( 'badge-source' ),
       post_id: $designer.data( 'post-id' ),
       nonce: $designer.data( 'nonce' ),
       }
