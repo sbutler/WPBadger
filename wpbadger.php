@@ -22,6 +22,7 @@ register_deactivation_hook(__FILE__,'wpbadger_deactivate');
 add_action('wp_enqueue_scripts', 'wpbadger_enqueue_scripts');
 
 require_once( dirname(__FILE__) . '/includes/badges.php' );
+require_once( dirname(__FILE__) . '/includes/badges_designer.php' );
 require_once( dirname(__FILE__) . '/includes/badges_stats.php' );
 require_once( dirname(__FILE__) . '/includes/awards.php' );
 

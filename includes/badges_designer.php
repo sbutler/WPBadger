@@ -141,7 +141,7 @@ function _wpbadger_badgedesigner_wp_handle_upload( &$file, $overrides = false, $
     $file = apply_filters( 'wp_handle_upload_prefilter', $file );
 
     // You may define your own function and pass the name in $overrides['upload_error_handler']
-    $upload_error_handler = '_wpbadger_badgedesigner_wp_handle_upload_error' );
+    $upload_error_handler = '_wpbadger_badgedesigner_wp_handle_upload_error';
 
     // You may have had one or more 'wp_handle_upload_prefilter' functions error out the file. Handle that gracefully.
     if (isset( $file[ 'error' ] ) && !is_numeric( $file[ 'error' ] ) && $file[ 'error' ])
@@ -328,7 +328,7 @@ function wpbadger_badgedesigner_openbadges_pre_upload( $post_id, $raw_badge, &$p
     return $_f;
 }
 
-function wpbadger_badgedesigner_openbadges_post_save( $post_id, $attachment_id, &$stash )
+function wpbadger_badgedesigner_openbadges_post_upload( $post_id, $attachment_id, &$stash )
 {
     $badge = $stash[ 'badge' ];
 
