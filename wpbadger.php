@@ -53,12 +53,12 @@ function wpbadger_deactivate()
 
 function wpbadger_admin_init()
 {
-    wp_register_style( 'wpbadger-admin-styles', plugins_url('css/admin-styles.css', __FILE__) );
-    wp_register_script( 'wpbadger-admin-post', plugins_url('js/admin-post.js', __FILE__), array( 'post' ) );
-
     /* fancybox stuff */
     wp_register_style( 'fancybox-styles', plugins_url('fancybox/jquery.fancybox.css', __FILE__) );
     wp_register_script( 'fancybox', plugins_url('fancybox/jquery.fancybox.js', __FILE__), array( 'jquery' ) );
+
+    wp_register_style( 'wpbadger-admin-styles', plugins_url('css/admin-styles.css', __FILE__) );
+    wp_register_script( 'wpbadger-admin-post', plugins_url('js/admin-post.js', __FILE__), array( 'post', 'fancybox' ) );
 }
 
 function wpbadger_admin_head()
@@ -73,10 +73,7 @@ function wpbadger_admin_head()
     wp_enqueue_style( 'fancybox-styles' );
 
     if ($pagenow == 'post.php' || $pagenow == 'post-new.php')
-    {
         wp_enqueue_script( 'wpbadger-admin-post' );
-        wp_enqueue_script( 'fancybox' );
-    }
 }
 
 function wpbadger_enqueue_scripts()
