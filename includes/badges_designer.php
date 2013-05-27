@@ -36,11 +36,22 @@ function wpbadger_badgedesigner_admin_post_thumbnail_html( $content, $post_id )
         esc_html__( 'Media Library' )
     );
 
+    if (is_multisite())
+    {
+        $origin = network_site_url();
+        $email = get_site_option( 'admin_email' );
+    }
+    else
+    {
+        $origin = site_url();
+        $email = get_bloginfo( 'admin_email' );
+    }
+
     $designer_link = sprintf( '<a href="https://www.openbadges.me/designer.html?format=json&amp;origin=%3$s&amp;email=%4$s&amp;uniqueID=%7$s" title="%1$s" id="wpbadger-badge-designer" data-post-id="%5$d" data-nonce="%6$s" data-badge-source="openbadges.me">%2$s</a>',
         esc_attr__( 'Badge Designer', 'wpbadger' ),
         esc_html__( 'Badge Designer', 'wpbadger' ),
-        urlencode( get_site_url() ),
-        urlencode( get_bloginfo( 'admin_email' ) ),
+        urlencode( $origin ),
+        urlencode( $email ),
         $post_id,
         esc_attr( wp_create_nonce( 'wpbadger-badgedesigner' ) ),
         urlencode( get_current_user_id() )
